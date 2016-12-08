@@ -10,6 +10,7 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+import org.apache.commons.lang3.StringEscapeUtils;
 
 /**
  *
@@ -17,6 +18,8 @@ import java.util.Scanner;
  */
 public class OutputFormat {
 
+    private static String SQL_NULL = "NULL";
+    
     private static String[] OUTPUT_OPTIONS = {
         "INSERT",
         "UPDATE"
@@ -81,11 +84,16 @@ public class OutputFormat {
     }
 
     public static String makeSqlFriendly(String input) {
+        if(input.equals(SQL_NULL)){
+            return input;
+        }
+        
         try {
             int i = Integer.parseInt(input);
             return input;
         } catch (Exception e) {
-            return "'" + input + "'";
+            
+            return "'" + input.replaceAll("'", "''") + "'";
         }
 
     }
