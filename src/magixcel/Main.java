@@ -81,8 +81,10 @@ public class Main {
             if(s.hasNextLine()){
                 selectedOption = Integer.parseInt(s.nextLine());
             }
-            doContinue = OutputFormat.chooseOption(selectedOption);
+            doContinue = OutputFormat.chooseOption(selectedOption, s);
         }
+        
+        
         doContinue = false;
         OutputFormat.format();
         
