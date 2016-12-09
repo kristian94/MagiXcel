@@ -19,7 +19,7 @@ import org.apache.commons.lang3.StringEscapeUtils;
 public class OutputFormat {
 
     private static String SQL_NULL = "NULL";
-    
+
     private static String[] OUTPUT_OPTIONS = {
         "INSERT",
         "UPDATE"
@@ -30,23 +30,28 @@ public class OutputFormat {
     public static void getSqlInsert() {
 
         OUTPUT_LINES.add("INSERT INTO " + Table.TABLE_NAME);
-        OUTPUT_LINES.add("VALUES (" + Table.getJoinedColumnNames() + ")");
+        OUTPUT_LINES.add("(" + Table.getJoinedColumnNames() + ") VALUES");
         boolean isFirstRow = true;
 
         for (JsonObject jsonObject : Table.ROWS) {
-            String row = "(";
+            String line = "(";
             if (!isFirstRow) {
-                row = ",(";
+                line = ",(";
             }
             isFirstRow = false;
             for (String columnName : Table.COLUMN_NAMES) {
-                row += makeSqlFriendly(jsonObject.get(columnName).getAsString());
-                row += ", ";
-            }
-            row = row.substring(0, row.length() - 2);
-            row += ")";
+                try {
+                    line += makeSqlFriendly(jsonObject.get(columnName).getAsString());
+                } catch (NullPointerException npe) {
+                    line += SQL_NULL;
+                }
 
-            OUTPUT_LINES.add(row);
+                line += ", ";
+            }
+            line = line.substring(0, line.length() - 2);
+            line += ")";
+
+            OUTPUT_LINES.add(line);
         }
         if (Globals.DEVELOPER_MODE == 1) {
             printOutputLines();
@@ -67,7 +72,11 @@ public class OutputFormat {
                     }
                     line += columnName;
                     line += " = ";
-                    line += makeSqlFriendly(jsonObject.get(columnName).getAsString());
+                    try {
+                        line += makeSqlFriendly(jsonObject.get(columnName).getAsString());
+                    } catch (NullPointerException npe) {
+                        line += SQL_NULL;
+                    }
 
                     firstRow = false;
                     OUTPUT_LINES.add(line);
@@ -84,15 +93,17 @@ public class OutputFormat {
     }
 
     public static String makeSqlFriendly(String input) {
-        if(input.equals(SQL_NULL)){
+        if (input.equals(SQL_NULL)) {
             return input;
         }
-        
+
         try {
             int i = Integer.parseInt(input);
             return input;
         } catch (Exception e) {
-            
+            if (input.length() > 1 && input.charAt(0) == '"') {
+                input = input.substring(1, input.length() - 1);
+            }
             return "'" + input.replaceAll("'", "''") + "'";
         }
 
